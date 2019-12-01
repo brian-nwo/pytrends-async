@@ -2,7 +2,7 @@
 
 ## Introduction
 
-A fork of pytrends that replaces the underlying request mechanism with httpx in order to allow asynchronous http requests.
+A fork of pytrends that replaces the underlying request mechanism with httpx in order to allow asynchronous requests.
 
 **Looking for maintainers!**
 
