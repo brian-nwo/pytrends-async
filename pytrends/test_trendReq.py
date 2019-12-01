@@ -1,60 +1,86 @@
 from unittest import TestCase
 
 from pytrends.request import TrendReq
+import asyncio
+import pytest;
 
+TIMEOUT = 30
 
-class TestTrendReq(TestCase):
+class TestTrendReq:
 
-    def test__get_data(self):
+    @pytest.mark.asyncio
+    async def test_get_data(self):
         """Should use same values as in the documentation"""
-        pytrend = TrendReq()
-        self.assertEqual(pytrend.hl, 'en-US')
-        self.assertEqual(pytrend.tz, 360)
-        self.assertEqual(pytrend.geo, '')
-        self.assertTrue(pytrend.cookies['NID'])
+        pytrend = TrendReq(timeout=TIMEOUT)
+        assert pytrend.hl == 'en-US'
+        assert pytrend.tz == 360
+        assert pytrend.geo == ''
 
-    def test_build_payload(self):
+    @pytest.mark.asyncio
+    async def test_get_cookie_on_request(self):
+        pytrend = TrendReq(timeout=TIMEOUT)
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        await pytrend.interest_over_time()
+        assert pytrend.cookies['NID']
+    
+    @pytest.mark.asyncio
+    async def test_build_payload(self):
         """Should return the widgets to get data"""
-        pytrend = TrendReq()
-        pytrend.build_payload(kw_list=['pizza', 'bagel'])
-        self.assertIsNotNone(pytrend.token_payload)
+        pytrend = TrendReq(timeout=TIMEOUT)
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        assert pytrend.token_payload is not None
 
-    def test__tokens(self):
-        pytrend = TrendReq()
-        pytrend.build_payload(kw_list=['pizza', 'bagel'])
-        self.assertIsNotNone(pytrend.related_queries_widget_list)
+    @pytest.mark.asyncio
+    async def test_tokens(self):
+        pytrend = TrendReq(timeout=TIMEOUT)
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        assert pytrend.related_queries_widget_list != None
 
-    def test_interest_over_time(self):
-        pytrend = TrendReq()
-        pytrend.build_payload(kw_list=['pizza', 'bagel'])
-        self.assertIsNotNone(pytrend.interest_over_time())
+    @pytest.mark.asyncio
+    async def test_interest_over_time(self):
+        pytrend = TrendReq(timeout=TIMEOUT)
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        resp = await pytrend.interest_over_time()
+        assert resp is not None
 
-    def test_interest_by_region(self):
-        pytrend = TrendReq()
-        pytrend.build_payload(kw_list=['pizza', 'bagel'])
-        self.assertIsNotNone(pytrend.interest_by_region())
+    @pytest.mark.asyncio
+    async def test_interest_by_region(self):
+        pytrend = TrendReq(timeout=TIMEOUT)
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        interest = await pytrend.interest_by_region()
+        assert interest is not None
 
-    def test_related_topics(self):
-        pytrend = TrendReq()
-        pytrend.build_payload(kw_list=['pizza', 'bagel'])
-        self.assertIsNotNone(pytrend.related_topics())
+    @pytest.mark.asyncio
+    async def test_related_topics(self):
+        pytrend = TrendReq(timeout=TIMEOUT)
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        related_topics = await pytrend.related_topics()
+        assert related_topics is not None
 
-    def test_related_queries(self):
-        pytrend = TrendReq()
-        pytrend.build_payload(kw_list=['pizza', 'bagel'])
-        self.assertIsNotNone(pytrend.related_queries())
+    @pytest.mark.asyncio
+    async def test_related_queries(self):
+        pytrend = TrendReq(timeout=TIMEOUT)
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        related_queries = await pytrend.related_queries()
+        assert related_queries is not None
 
-    def test_trending_searches(self):
-        pytrend = TrendReq()
-        pytrend.build_payload(kw_list=['pizza', 'bagel'])
-        self.assertIsNotNone(pytrend.trending_searches(pn='p1'))
+    @pytest.mark.asyncio
+    async def test_trending_searches(self):
+        pytrend = TrendReq(timeout=TIMEOUT)
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        trending_searches = await pytrend.trending_searches(pn='united_states')
+        assert trending_searches is not None
 
-    def test_top_charts(self):
-        pytrend = TrendReq()
-        pytrend.build_payload(kw_list=['pizza', 'bagel'])
-        self.assertIsNotNone(pytrend.top_charts(cid='actors', date=201611))
+    @pytest.mark.asyncio
+    async def test_top_charts(self):
+        pytrend = TrendReq(timeout=TIMEOUT)
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        top_charts = await pytrend.top_charts(date=2016)
+        assert top_charts is not None
 
-    def test_suggestions(self):
-        pytrend = TrendReq()
-        pytrend.build_payload(kw_list=['pizza', 'bagel'])
-        self.assertIsNotNone(pytrend.suggestions(keyword='pizza'))
+    @pytest.mark.asyncio
+    async def test_suggestions(self):
+        pytrend = TrendReq(timeout=TIMEOUT)
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        suggestions = await pytrend.suggestions(keyword='pizza')
+        assert suggestions is not None
