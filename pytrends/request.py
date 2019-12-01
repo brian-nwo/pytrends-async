@@ -6,16 +6,11 @@ import time
 from datetime import datetime, timedelta
 
 import pandas as pd
-import requests
 from httpx.client import Client
 from httpx.config import TimeoutConfig, DEFAULT_TIMEOUT_CONFIG
 from httpx.exceptions import ProxyError
 
-
-
 from pandas.io.json._normalize import nested_to_record
-from requests.packages.urllib3.util.retry import Retry
-
 from pytrends import exceptions
 
 if sys.version_info[0] == 2:  # Python 2
@@ -40,8 +35,7 @@ class TrendReq(object):
     CATEGORIES_URL = 'https://trends.google.com/trends/api/explore/pickers/category'
     TODAY_SEARCHES_URL = 'https://trends.google.com/trends/api/dailytrends'
 
-    def __init__(self, hl='en-US', tz=360, geo='', timeout=DEFAULT_TIMEOUT_CONFIG, proxies='',
-                 retries=0, backoff_factor=0):
+    def __init__(self, hl='en-US', tz=360, geo='', timeout=DEFAULT_TIMEOUT_CONFIG, proxies=''):
         """
         Initialize default values for params
         """
@@ -55,8 +49,6 @@ class TrendReq(object):
         self.kw_list = list()
         self.timeout = timeout
         self.proxies = proxies  # add a proxy option
-        self.retries = retries
-        self.backoff_factor = backoff_factor
         self.proxy_index = 0
         self.cookies = None
         # intialize widget payloads
@@ -112,13 +104,8 @@ class TrendReq(object):
         """
         if self.cookies is None:
             self.cookies = await self.GetGoogleCookie()
+            
         c = Client()
-        # Retries mechanism. Activated when one of statements >0 (best used for proxy)
-        if self.retries > 0 or self.backoff_factor > 0:
-            retry = Retry(total=self.retries, read=self.retries,
-                          connect=self.retries,
-                          backoff_factor=self.backoff_factor)
-
         c.headers.update({'accept-language': self.hl})
         if len(self.proxies) > 0:
             self.cookies = await self.GetGoogleCookie()
