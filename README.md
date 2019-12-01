@@ -1,13 +1,10 @@
-# pytrends
+# pytrends-async
 
 ## Introduction
 
 A fork of pytrends with full async/await support.
 
-**Looking for maintainers!**
-
-
-## Table of contens
+## Table of contents
 
 * [Installation](#installation)
 
