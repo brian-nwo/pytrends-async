@@ -5,8 +5,8 @@ from calendar import monthrange
 
 import pandas as pd
 
-from pytrends.exceptions import ResponseError
-from pytrends.request import TrendReq
+from pytrendsasync.exceptions import ResponseError
+from pytrendsasync.request import TrendReq
 from asyncio import iscoroutinefunction
 
 

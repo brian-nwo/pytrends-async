@@ -1,4 +1,4 @@
-from pytrends.request import TrendReq
+from pytrendsasync.request import TrendReq
 
 # Login to Google. Only need to run this once, the rest of requests will use the same session.
 pytrend = TrendReq()

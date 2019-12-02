@@ -11,7 +11,7 @@ from httpx.config import TimeoutConfig, DEFAULT_TIMEOUT_CONFIG
 from httpx.exceptions import ProxyError
 
 from pandas.io.json._normalize import nested_to_record
-from pytrends import exceptions
+from pytrendsasync import exceptions
 
 if sys.version_info[0] == 2:  # Python 2
     from urllib import quote

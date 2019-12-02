@@ -9,27 +9,23 @@ with io.open(os.path.join(dir, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='pytrends',
-    version='4.7.2',
-    description='Pseudo API for Google Trends',
+    name='pytrends-async',
+    version='0.1.0',
+    description='Pseudo API for Google Trends with asyncio support.',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/dreyco676/pytrends',
-    author=['John Hogue', 'Burton DeWilde'],
-    author_email='dreyco676@gmail.com',
+    url='https://github.com/KyleKreutzer/pytrends-async',
+    author=['Kyle Kreutzer'],
+    author_email='kyleakreutzer@gmail.com',
     license='Apache 2.0',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'License :: OSI Approved :: MIT License'
     ],
-    install_requires=['requests', 'pandas>=0.25', 'lxml', 'httpx'],
-    keywords='google trends api search',
-    packages=['pytrends'],
+    install_requires=['pandas>=0.25', 'lxml', 'httpx==0.8.0'],
+    keywords='google trends api search async',
+    packages=['pytrendsasync'],
 )

@@ -1,9 +1,9 @@
 from unittest import TestCase
 
-from pytrends.request import TrendReq
+from pytrendsasync.request import TrendReq
 import asyncio
 import pytest
-from pytrends.dailydata import get_daily_data
+from pytrendsasync.dailydata import get_daily_data
 from datetime import date
 
 TIMEOUT = 30
