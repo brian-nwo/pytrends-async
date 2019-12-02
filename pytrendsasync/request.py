@@ -69,11 +69,11 @@ class TrendReq(object):
             else:
                 proxy = None
             try:
-                c = Client(proxies=proxy)
-                resp = await c.get(
-                    'https://trends.google.com/?geo={geo}'.format(
-                    geo=self.hl[-2:]),
-                    timeout=self.timeout)
+                async with Client(proxies=proxy) as c:
+                    resp = await c.get(
+                        'https://trends.google.com/?geo={geo}'.format(
+                        geo=self.hl[-2:]),
+                        timeout=self.timeout)
                 cookies = resp.cookies.items()
                 return dict(filter(lambda i: i[0] == 'NID', cookies))
             except ProxyError:
@@ -105,17 +105,17 @@ class TrendReq(object):
         if self.cookies is None:
             self.cookies = await self.GetGoogleCookie()
             
-        c = Client()
-        c.headers.update({'accept-language': self.hl})
-        if len(self.proxies) > 0:
-            self.cookies = await self.GetGoogleCookie()
-            c.proxies.update({'https': self.proxies[self.proxy_index]})
-        if method == TrendReq.POST_METHOD:
-            response = await c.post(url, timeout=self.timeout,
-                              cookies=self.cookies, **kwargs)  # DO NOT USE retries or backoff_factor here
-        else:
-            response = await c.get(url, timeout=self.timeout, cookies=self.cookies,
-                             **kwargs)  # DO NOT USE retries or backoff_factor here
+        async with Client() as c:
+            c.headers.update({'accept-language': self.hl})
+            if len(self.proxies) > 0:
+                self.cookies = await self.GetGoogleCookie()
+                c.proxies.update({'https': self.proxies[self.proxy_index]})
+            if method == TrendReq.POST_METHOD:
+                response = await c.post(url, timeout=self.timeout,
+                                cookies=self.cookies, **kwargs)  # DO NOT USE retries or backoff_factor here
+            else:
+                response = await c.get(url, timeout=self.timeout, cookies=self.cookies,
+                                **kwargs)  # DO NOT USE retries or backoff_factor here
         # check if the response contains json and throw an exception otherwise
         # Google mostly sends 'application/json' in the Content-Type header,
         # but occasionally it sends 'application/javascript

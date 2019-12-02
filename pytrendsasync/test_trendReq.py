@@ -97,7 +97,7 @@ class TestDailyData:
 
         data = await get_daily_data(
             'cat', d1.year, d1.month, 
-            d2.year, d2.month, wait_time=0)
+            d2.year, d2.month, wait_time=1)
         assert data is not None
         assert len(data) == day_count
         
