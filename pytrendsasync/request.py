@@ -110,12 +110,9 @@ class TrendReq(object):
             if len(self.proxies) > 0:
                 self.cookies = await self.GetGoogleCookie()
                 c.proxies.update({'https': self.proxies[self.proxy_index]})
-            if method == TrendReq.POST_METHOD:
-                response = await c.post(url, timeout=self.timeout,
-                                cookies=self.cookies, **kwargs)  # DO NOT USE retries or backoff_factor here
-            else:
-                response = await c.get(url, timeout=self.timeout, cookies=self.cookies,
-                                **kwargs)  # DO NOT USE retries or backoff_factor here
+            req = c.post if method == TrendReq.POST_METHOD else c.get
+            response = await req(url, timeout=self.timeout, cookies=self.cookies, **kwargs)
+            
         # check if the response contains json and throw an exception otherwise
         # Google mostly sends 'application/json' in the Content-Type header,
         # but occasionally it sends 'application/javascript
