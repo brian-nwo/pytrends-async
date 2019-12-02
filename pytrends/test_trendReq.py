@@ -2,7 +2,9 @@ from unittest import TestCase
 
 from pytrends.request import TrendReq
 import asyncio
-import pytest;
+import pytest
+from pytrends.dailydata import get_daily_data
+from datetime import date
 
 TIMEOUT = 30
 
@@ -84,3 +86,18 @@ class TestTrendReq:
         await pytrend.build_payload(kw_list=['pizza', 'bagel'])
         suggestions = await pytrend.suggestions(keyword='pizza')
         assert suggestions is not None
+
+class TestDailyData:
+
+    @pytest.mark.asyncio
+    async def test_daily_data(self):
+        d1 = date(2018, 6, 1)
+        d2 = date(2018, 12, 31)
+        day_count = (d2 - d1).days + 1
+
+        data = await get_daily_data(
+            'cat', d1.year, d1.month, 
+            d2.year, d2.month, wait_time=0)
+        assert data is not None
+        assert len(data) == day_count
+        
