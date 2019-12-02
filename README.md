@@ -2,7 +2,9 @@
 
 ## Introduction
 
-A fork of pytrends with full async/await support.
+A fork of pytrends with full async/await support. This package is currently in
+development early testing/development and is lacking proper retry support and
+exception handling.
 
 ## Table of contents
 
@@ -33,8 +35,8 @@ A fork of pytrends with full async/await support.
 
 ## Requirements
 
-* Written for both Python 2.7+ and Python 3.3+
-* Requires Requests, lxml, Pandas
+* Written for python 3.6+
+* Requires httpx==0.8.0, lxml, Pandas
 
 <sub><sup>[back to top](#pytrends)</sub></sup>
 
@@ -188,7 +190,7 @@ Many API methods use the following:
 
 ### Interest Over Time
 
-    pytrends.interest_over_time()
+    await pytrends.interest_over_time()
 
 Returns pandas.Dataframe
 
@@ -197,7 +199,7 @@ Returns pandas.Dataframe
 
 ### Historical Hourly Interest
 
-    pytrends.get_historical_interest(kw_list, year_start=2018, month_start=1, day_start=1, hour_start=0, year_end=2018, month_end=2, day_end=1, hour_end=0, cat=0, geo='', gprop='', sleep=0)
+    await pytrends.get_historical_interest(kw_list, year_start=2018, month_start=1, day_start=1, hour_start=0, year_end=2018, month_end=2, day_end=1, hour_end=0, cat=0, geo='', gprop='', sleep=0)
     
 Parameters 
 
@@ -220,7 +222,7 @@ Returns pandas.Dataframe
 
 ### Interest by Region
 
-    pytrends.interest_by_region(resolution='COUNTRY', inc_low_vol=True, inc_geo_code=False)
+     await pytrends.interest_by_region(resolution='COUNTRY', inc_low_vol=True, inc_geo_code=False)
 
 Parameters
 
@@ -245,7 +247,7 @@ Returns pandas.DataFrame
 
 ### Related Topics
 
-    pytrends.related_topics()
+    await pytrends.related_topics()
 
 Returns dictionary of pandas.DataFrames
 
@@ -253,7 +255,7 @@ Returns dictionary of pandas.DataFrames
 
 ### Related Queries
 
-    pytrends.related_queries()
+    await pytrends.related_queries()
 
 Returns dictionary of pandas.DataFrames
 
@@ -261,8 +263,8 @@ Returns dictionary of pandas.DataFrames
 
 ### Trending Searches
 
-	pytrends.trending_searches(pn='united_states') # trending searches in real time for United States
-	pytrends.trending_searches(pn='japan') # Japan
+	await pytrends.trending_searches(pn='united_states') # trending searches in real time for United States
+	await pytrends.trending_searches(pn='japan') # Japan
 
 Returns pandas.DataFrame
 
@@ -270,7 +272,7 @@ Returns pandas.DataFrame
 
 ### Top Charts
 
-    pytrends.top_charts(date, hl='en-US', tz=300, geo='GLOBAL')
+    await pytrends.top_charts(date, hl='en-US', tz=300, geo='GLOBAL')
 
 Parameters
 
@@ -286,7 +288,7 @@ Returns pandas.DataFrame
 
 ### Suggestions
 
-    pytrends.suggestions(keyword)
+    await pytrends.suggestions(keyword)
 
 Parameters
 
@@ -301,7 +303,7 @@ Returns dictionary
 
 ### Categories
 
-    pytrends.categories()
+    await pytrends.categories()
 
 Returns dictionary
 
