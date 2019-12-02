@@ -1,15 +1,10 @@
-# pytrends
+# pytrends-async
 
 ## Introduction
 
-Unofficial API for Google Trends
+A fork of pytrends with full async/await support.
 
-Allows simple interface for automating downloading of reports from Google Trends. Main feature is to allow the script to login to Google on your behalf to enable a higher rate limit. Only good until Google changes their backend again :-P. When that happens feel free to contribute!
-
-**Looking for maintainers!**
-
-
-## Table of contens
+## Table of contents
 
 * [Installation](#installation)
 
