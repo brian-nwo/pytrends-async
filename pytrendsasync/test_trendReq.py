@@ -5,6 +5,7 @@ import asyncio
 import pytest
 from pytrendsasync.dailydata import get_daily_data
 from datetime import date
+import httpx
 
 TIMEOUT = 30
 
@@ -28,8 +29,10 @@ class TestTrendReq:
     @pytest.mark.asyncio
     async def test_build_payload(self):
         """Should return the widgets to get data"""
-        pytrend = TrendReq(timeout=TIMEOUT)
+        pytrend = TrendReq(timeout=TIMEOUT, proxies=['http://54.37.130.197:3128'])
         await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        resp = await pytrend.interest_over_time()
+        pytest.set_trace()
         assert pytrend.token_payload is not None
 
     @pytest.mark.asyncio

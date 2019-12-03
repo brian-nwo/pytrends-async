@@ -58,40 +58,50 @@ class TrendReq(object):
         self.related_topics_widget_list = list()
         self.related_queries_widget_list = list()
 
+    def _get_proxy(self):
+        """
+        Gets the currently set proxy. Returns None if no proxies.
+
+        Returns:
+            dict{str, str} -- A dict containing the protocol and url of a proxy
+        """ 
+        proxy = None
+        if len(self.proxies) > 0:
+            proxy = self.proxies[self.proxy_index]
+            proxy = {'all': self.proxies[self.proxy_index]}
+        return proxy
+    
+    def _iterate_proxy(self):
+        """
+        Iterates what proxy will be used for the next request.
+        """
+        if self.proxy_index < (len(self.proxies) - 1):
+            self.proxy_index += 1
+        else:
+            self.proxy_index = 0
+
     async def GetGoogleCookie(self):
         """
-        Gets google cookie (used for each and every proxy; once on init otherwise)
+        Gets google cookie (used for each and every proxy)
         Removes proxy from the list on proxy error
         """
         while True:
-            if len(self.proxies) > 0:
-                proxy = {'https': self.proxies[self.proxy_index]}
-            else:
-                proxy = None
             try:
-                async with Client(proxies=proxy) as c:
+                proxy = self._get_proxy()
+                async with Client(proxies=proxy, http_versions=["HTTP/1.1"]) as c:
                     resp = await c.get(
                         'https://trends.google.com/?geo={geo}'.format(
                         geo=self.hl[-2:]),
                         timeout=self.timeout)
                 cookies = resp.cookies.items()
                 return dict(filter(lambda i: i[0] == 'NID', cookies))
-            except ProxyError:
-                print('Proxy error. Changing IP')
+            except ProxyError as ex:
+                print('Proxy error. Changing IP {0}'.format(str(ex)))
                 if len(self.proxies) > 0:
                     self.proxies.remove(self.proxies[self.proxy_index])
                 else:
                     print('Proxy list is empty. Bye!')
                 continue
-
-    def GetNewProxy(self):
-        """
-        Increment proxy INDEX; zero on overflow
-        """
-        if self.proxy_index < (len(self.proxies) - 1):
-            self.proxy_index += 1
-        else:
-            self.proxy_index = 0
 
     async def _get_data(self, url, method=GET_METHOD, trim_chars=0, **kwargs):
         """Send a request to Google and return the JSON response as a Python object
@@ -102,17 +112,14 @@ class TrendReq(object):
         :param kwargs: any extra key arguments passed to the request builder (usually query parameters or data)
         :return:
         """
-        if self.cookies is None:
+        if self.cookies is None or len(self.proxies) > 0:
             self.cookies = await self.GetGoogleCookie()
-            
-        async with Client() as c:
+
+        proxy = self._get_proxy()
+        async with Client(proxies=proxy, http_versions=["HTTP/1.1"]) as c:
             c.headers.update({'accept-language': self.hl})
-            if len(self.proxies) > 0:
-                self.cookies = await self.GetGoogleCookie()
-                c.proxies.update({'https': self.proxies[self.proxy_index]})
             req = c.post if method == TrendReq.POST_METHOD else c.get
             response = await req(url, timeout=self.timeout, cookies=self.cookies, **kwargs)
-            
         # check if the response contains json and throw an exception otherwise
         # Google mostly sends 'application/json' in the Content-Type header,
         # but occasionally it sends 'application/javascript
@@ -126,7 +133,7 @@ class TrendReq(object):
             # these have to be cleaned before being passed to the json parser
             content = response.text[trim_chars:]
             # parse json
-            self.GetNewProxy()
+            self._iterate_proxy()
             return json.loads(content)
         else:
             # error
