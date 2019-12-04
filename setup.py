@@ -15,7 +15,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/KyleKreutzer/pytrends-async',
-    download_url='https://github.com/KyleKreutzer/pytrends-async/archive/0.2.0.tar.gz',
+    download_url='https://github.com/KyleKreutzer/pytrends-async/archive/0.2.1.tar.gz',
     author=['Kyle Kreutzer'],
     author_email='kyleakreutzer@gmail.com',
     license='Apache 2.0',
