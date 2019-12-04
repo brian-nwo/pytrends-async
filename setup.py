@@ -10,7 +10,7 @@ with io.open(os.path.join(dir, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='pytrends-async',
-    version='0.1.0',
+    version='0.2.0',
     description='Pseudo API for Google Trends with asyncio support.',
     long_description=long_description,
     long_description_content_type='text/markdown',
