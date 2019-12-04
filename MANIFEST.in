@@ -1,1 +1,3 @@
 include README.md
+include CHANGELOG.md
+prune pytrendsasync/test_trendReq.py
