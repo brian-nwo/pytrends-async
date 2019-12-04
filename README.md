@@ -31,7 +31,7 @@ exception handling.
 
 ## Installation
 
-    pip install pytrends
+    pip install pytrends-async
 
 ## Requirements
 
