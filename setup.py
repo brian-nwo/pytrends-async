@@ -1,7 +1,7 @@
 import io
 import os
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 dir = os.path.dirname(__file__)
 
@@ -28,5 +28,5 @@ setup(
     ],
     install_requires=['pandas>=0.25', 'lxml', 'httpx==0.8.0'],
     keywords='google trends api search async asyncio',
-    packages=['pytrendsasync'],
+    packages=find_packages("pytrendsasync", exclude=["test"]),
 )
