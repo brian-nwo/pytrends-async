@@ -6,6 +6,7 @@ import pytest
 from pytrendsasync.dailydata import get_daily_data
 from datetime import date
 import httpx
+import proxy
 
 TIMEOUT = 30
 
@@ -88,6 +89,48 @@ class TestTrendReq:
         await pytrend.build_payload(kw_list=['pizza', 'bagel'])
         suggestions = await pytrend.suggestions(keyword='pizza')
         assert suggestions is not None
+
+    @pytest.mark.asyncio
+    async def test_send_req_through_proxy(self, create_proxy):
+        create_proxy('127.0.0.1', 8899)
+        pytrend = TrendReq(timeout=TIMEOUT, proxies=['http://127.0.0.1:8899'])
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        resp = await pytrend.interest_over_time()
+        assert resp is not None
+
+    @pytest.mark.asyncio
+    async def test_proxy_cycling(self, create_proxy):
+        create_proxy('127.0.0.1', 8899)
+        create_proxy('127.0.0.1', 8900)
+        proxies = ['http://127.0.0.1:8899', 'http://127.0.0.1:8900']
+
+        pytrend = TrendReq(timeout=TIMEOUT, proxies=proxies)
+        last_proxy = pytrend._get_proxy()
+
+        await pytrend.suggestions(keyword='pizza')
+        curr_proxy = pytrend._get_proxy()
+        assert curr_proxy != last_proxy
+        last_proxy = curr_proxy
+
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        curr_proxy = pytrend._get_proxy()
+        assert curr_proxy != last_proxy
+
+    @pytest.mark.asyncio
+    async def test_blacklist_proxy_on_failure(self, create_proxy):
+        pytrend = TrendReq(timeout=TIMEOUT, proxies=['http://127.0.0.1:2391'])
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        assert pytrend._get_proxy() is None
+
+    @pytest.mark.asyncio
+    async def test_fallback_to_local_requests_on_last_proxy_failure(self):
+        pytrend = TrendReq(timeout=TIMEOUT, proxies=['http://127.0.0.1:2391', 'http://127.0.0.1:2390'])
+        await pytrend.build_payload(kw_list=['pizza', 'bagel'])
+        resp = await pytrend.interest_over_time()
+        assert len(pytrend.proxies) == 0
+        assert resp is not None
+        
+
 
 class TestDailyData:
 

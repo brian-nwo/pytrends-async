@@ -12,12 +12,14 @@ from httpx.exceptions import ProxyError
 
 from pandas.io.json._normalize import nested_to_record
 from pytrendsasync import exceptions
+import logging
 
 if sys.version_info[0] == 2:  # Python 2
     from urllib import quote
 else:  # Python 3
     from urllib.parse import quote
 
+log = logging.getLogger(__name__)
 
 class TrendReq(object):
     """
@@ -95,13 +97,13 @@ class TrendReq(object):
                         timeout=self.timeout)
                 cookies = resp.cookies.items()
                 return dict(filter(lambda i: i[0] == 'NID', cookies))
-            except ProxyError as ex:
-                print('Proxy error. Changing IP {0}'.format(str(ex)))
+            except (ProxyError, ConnectionRefusedError) as ex:
                 if len(self.proxies) > 0:
+                    log.warning((f'Proxy responded with {str(ex)}. Will try again '
+                                  'with a different proxy (or no proxy if none remaining).'))
                     self.proxies.remove(self.proxies[self.proxy_index])
                 else:
-                    print('Proxy list is empty. Bye!')
-                continue
+                    raise
 
     async def _get_data(self, url, method=GET_METHOD, trim_chars=0, **kwargs):
         """Send a request to Google and return the JSON response as a Python object
