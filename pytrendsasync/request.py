@@ -8,11 +8,16 @@ from datetime import datetime, timedelta
 import pandas as pd
 from httpx.client import Client
 from httpx.config import TimeoutConfig, DEFAULT_TIMEOUT_CONFIG
-from httpx.exceptions import ProxyError
-
+from httpx.exceptions import HTTPError, ProxyError
 from pandas.io.json._normalize import nested_to_record
 from pytrendsasync import exceptions
 import logging
+import asyncio
+from tenacity import retry, AsyncRetrying
+from tenacity.stop import stop_after_attempt
+from tenacity.retry import retry_if_exception
+from tenacity.wait import wait_exponential
+from tenacity import DoAttempt, DoSleep, AttemptManager, RetryCallState
 
 if sys.version_info[0] == 2:  # Python 2
     from urllib import quote
@@ -20,6 +25,7 @@ else:  # Python 3
     from urllib.parse import quote
 
 log = logging.getLogger(__name__)
+
 
 class TrendReq(object):
     """
@@ -37,7 +43,7 @@ class TrendReq(object):
     CATEGORIES_URL = 'https://trends.google.com/trends/api/explore/pickers/category'
     TODAY_SEARCHES_URL = 'https://trends.google.com/trends/api/dailytrends'
 
-    def __init__(self, hl='en-US', tz=360, geo='', timeout=DEFAULT_TIMEOUT_CONFIG, proxies=''):
+    def __init__(self, hl='en-US', tz=360, geo='', timeout=DEFAULT_TIMEOUT_CONFIG, proxies=[], retries=3, backoff_factor=0.1):
         """
         Initialize default values for params
         """
@@ -51,6 +57,7 @@ class TrendReq(object):
         self.kw_list = list()
         self.timeout = timeout
         self.proxies = proxies  # add a proxy option
+        self._rate_limited_proxies = []
         self.proxy_index = 0
         self.cookies = None
         # intialize widget payloads
@@ -59,7 +66,14 @@ class TrendReq(object):
         self.interest_by_region_widget = dict()
         self.related_topics_widget_list = list()
         self.related_queries_widget_list = list()
+        self.backoff_factor = backoff_factor
+        self.retries = retries
 
+        self._retry_config = dict(
+            wait=wait_exponential(multiplier=self.backoff_factor), 
+            stop=stop_after_attempt(self.retries)
+        )
+        
     def _get_proxy(self):
         """
         Gets the currently set proxy. Returns None if no proxies.
@@ -82,28 +96,44 @@ class TrendReq(object):
         else:
             self.proxy_index = 0
 
+    async def _send_req(self, url, method=GET_METHOD, **kwargs):
+        proxy = self._get_proxy()
+        async with Client(proxies=proxy, http_versions=["HTTP/1.1"]) as c:
+            req = c.post if method == TrendReq.POST_METHOD else c.get
+            response = await req(url, **kwargs)
+        return response
+
     async def GetGoogleCookie(self):
         """
         Gets google cookie (used for each and every proxy)
         Removes proxy from the list on proxy error
         """
-        while True:
-            try:
-                proxy = self._get_proxy()
-                async with Client(proxies=proxy, http_versions=["HTTP/1.1"]) as c:
-                    resp = await c.get(
-                        'https://trends.google.com/?geo={geo}'.format(
-                        geo=self.hl[-2:]),
-                        timeout=self.timeout)
-                cookies = resp.cookies.items()
-                return dict(filter(lambda i: i[0] == 'NID', cookies))
-            except (ProxyError, ConnectionRefusedError) as ex:
-                if len(self.proxies) > 0:
-                    log.warning((f'Proxy responded with {str(ex)}. Will try again '
-                                  'with a different proxy (or no proxy if none remaining).'))
-                    self.proxies.remove(self.proxies[self.proxy_index])
-                else:
-                    raise
+        def retry_if_proxies_remaining(ex):
+            should_retry = True
+            if isinstance(ex, ProxyError) and ex.response.status_code == 429:
+                del self.proxies[self.proxy_index]
+                self._rate_limited_proxies.append(self.proxies[self.proxy_index])
+            elif len(self.proxies) > 0:
+                del self.proxies[self.proxy_index]
+            else:
+                should_retry = False
+            self._iterate_proxy()
+            return should_retry
+        
+        cfg = self._retry_config
+        if len(self.proxies) > 0:
+            cfg = dict(retry=retry_if_exception(retry_if_proxies_remaining))
+        try:
+            retryer = AsyncRetrying(**cfg)
+            resp = await retryer.call(
+                self._send_req, 'https://trends.google.com/?geo={geo}'.format(
+                    geo=self.hl[-2:]), timeout=self.timeout)
+        finally:
+            self.proxies.extend(self._rate_limited_proxies)
+            self._rate_limited_proxies.clear()
+        
+        cookies = resp.cookies.items()
+        return dict(filter(lambda i: i[0] == 'NID', cookies))
 
     async def _get_data(self, url, method=GET_METHOD, trim_chars=0, **kwargs):
         """Send a request to Google and return the JSON response as a Python object
@@ -117,11 +147,10 @@ class TrendReq(object):
         if self.cookies is None or len(self.proxies) > 0:
             self.cookies = await self.GetGoogleCookie()
 
-        proxy = self._get_proxy()
-        async with Client(proxies=proxy, http_versions=["HTTP/1.1"]) as c:
-            c.headers.update({'accept-language': self.hl})
-            req = c.post if method == TrendReq.POST_METHOD else c.get
-            response = await req(url, timeout=self.timeout, cookies=self.cookies, **kwargs)
+        retryer = AsyncRetrying(**self._retry_config)
+        response = await retryer.call(
+            self._send_req, url, method=method, timeout=self.timeout, 
+            cookies=self.cookies, headers={'accept-language': self.hl}, **kwargs)
         # check if the response contains json and throw an exception otherwise
         # Google mostly sends 'application/json' in the Content-Type header,
         # but occasionally it sends 'application/javascript
@@ -530,3 +559,4 @@ class TrendReq(object):
 
         # Return the dataframe with results from our timeframe
         return df.loc[initial_start_date:end_date]
+        
