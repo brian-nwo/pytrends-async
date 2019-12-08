@@ -15,7 +15,7 @@ import logging
 import asyncio
 from tenacity import retry, AsyncRetrying
 from tenacity.stop import stop_after_attempt
-from tenacity.retry import retry_if_exception
+from tenacity.retry import retry_if_exception_type, retry_if_exception
 from tenacity.wait import wait_exponential
 from tenacity import DoAttempt, DoSleep, AttemptManager, RetryCallState
 
@@ -56,7 +56,7 @@ class TrendReq(object):
         self.geo = geo
         self.kw_list = list()
         self.timeout = timeout
-        self.proxies = proxies  # add a proxy option
+        self.proxies = proxies.copy()  # add a proxy option
         self._rate_limited_proxies = []
         self.proxy_index = 0
         self.cookies = None
@@ -71,7 +71,11 @@ class TrendReq(object):
 
         self._retry_config = dict(
             wait=wait_exponential(multiplier=self.backoff_factor), 
-            stop=stop_after_attempt(self.retries)
+            stop=stop_after_attempt(self.retries),
+            retry=retry_if_exception_type((
+                ConnectionError, 
+                HTTPError, 
+                exceptions.ResponseError))
         )
         
     def _get_proxy(self):
@@ -99,8 +103,13 @@ class TrendReq(object):
     async def _send_req(self, url, method=GET_METHOD, **kwargs):
         proxy = self._get_proxy()
         async with Client(proxies=proxy, http_versions=["HTTP/1.1"]) as c:
-            req = c.post if method == TrendReq.POST_METHOD else c.get
+            req = getattr(c, method)
             response = await req(url, **kwargs)
+        if not str(response.status_code).startswith('2'):
+            raise exceptions.ResponseError(
+                'The request failed: Google returned a '
+                'response with code {0}.'.format(response.status_code),
+                response=response)
         return response
 
     async def GetGoogleCookie(self):
@@ -111,8 +120,8 @@ class TrendReq(object):
         def retry_if_proxies_remaining(ex):
             should_retry = True
             if isinstance(ex, ProxyError) and ex.response.status_code == 429:
-                del self.proxies[self.proxy_index]
                 self._rate_limited_proxies.append(self.proxies[self.proxy_index])
+                del self.proxies[self.proxy_index]
             elif len(self.proxies) > 0:
                 del self.proxies[self.proxy_index]
             else:
