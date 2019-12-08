@@ -7,17 +7,16 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 from httpx.client import Client
-from httpx.config import TimeoutConfig, DEFAULT_TIMEOUT_CONFIG
+from httpx.config import DEFAULT_TIMEOUT_CONFIG
 from httpx.exceptions import HTTPError, ProxyError
 from pandas.io.json._normalize import nested_to_record
 from pytrendsasync import exceptions
 import logging
 import asyncio
-from tenacity import retry, AsyncRetrying
+from tenacity import AsyncRetrying
 from tenacity.stop import stop_after_attempt
 from tenacity.retry import retry_if_exception_type, retry_if_exception
 from tenacity.wait import wait_exponential
-from tenacity import DoAttempt, DoSleep, AttemptManager, RetryCallState
 
 if sys.version_info[0] == 2:  # Python 2
     from urllib import quote
@@ -43,7 +42,7 @@ class TrendReq(object):
     CATEGORIES_URL = 'https://trends.google.com/trends/api/explore/pickers/category'
     TODAY_SEARCHES_URL = 'https://trends.google.com/trends/api/dailytrends'
 
-    def __init__(self, hl='en-US', tz=360, geo='', timeout=DEFAULT_TIMEOUT_CONFIG, proxies=[], retries=3, backoff_factor=0.1):
+    def __init__(self, hl='en-US', tz=360, geo='', timeout=DEFAULT_TIMEOUT_CONFIG, proxies=[], retries=0, backoff_factor=0):
         """
         Initialize default values for params
         """
@@ -57,6 +56,7 @@ class TrendReq(object):
         self.kw_list = list()
         self.timeout = timeout
         self.proxies = proxies.copy()  # add a proxy option
+        self.blacklisted_proxies = []
         self._rate_limited_proxies = []
         self.proxy_index = 0
         self.cookies = None
@@ -75,7 +75,8 @@ class TrendReq(object):
             retry=retry_if_exception_type((
                 ConnectionError, 
                 HTTPError, 
-                exceptions.ResponseError))
+                exceptions.ResponseError)),
+            reraise=True
         )
         
     def _get_proxy(self):
@@ -101,6 +102,21 @@ class TrendReq(object):
             self.proxy_index = 0
 
     async def _send_req(self, url, method=GET_METHOD, **kwargs):
+        """
+        Sends a request to the specified URL.
+        
+        Arguments:
+            url {str} -- Url to send request to.
+        
+        Keyword Arguments:
+            method {str} -- Method to use (part of httpx.client.Client) (default: {GET_METHOD})
+        
+        Raises:
+            ResponseError: Raised if a non-200 response code it returned.
+        
+        Returns:
+            Response -- A response object containing the requested information.
+        """        
         proxy = self._get_proxy()
         async with Client(proxies=proxy, http_versions=["HTTP/1.1"]) as c:
             req = getattr(c, method)
@@ -123,6 +139,7 @@ class TrendReq(object):
                 self._rate_limited_proxies.append(self.proxies[self.proxy_index])
                 del self.proxies[self.proxy_index]
             elif len(self.proxies) > 0:
+                self.blacklisted_proxies.append(self.proxies[self.proxy_index])
                 del self.proxies[self.proxy_index]
             else:
                 should_retry = False
@@ -131,7 +148,10 @@ class TrendReq(object):
         
         cfg = self._retry_config
         if len(self.proxies) > 0:
-            cfg = dict(retry=retry_if_exception(retry_if_proxies_remaining))
+            cfg = dict(
+                retry=retry_if_exception(retry_if_proxies_remaining), 
+                reraise=cfg.get('reraise', True)
+            )
         try:
             retryer = AsyncRetrying(**cfg)
             resp = await retryer.call(
