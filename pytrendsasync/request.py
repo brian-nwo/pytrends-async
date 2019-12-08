@@ -17,11 +17,7 @@ from tenacity import AsyncRetrying
 from tenacity.stop import stop_after_attempt
 from tenacity.retry import retry_if_exception_type, retry_if_exception
 from tenacity.wait import wait_exponential
-
-if sys.version_info[0] == 2:  # Python 2
-    from urllib import quote
-else:  # Python 3
-    from urllib.parse import quote
+from urllib.parse import quote
 
 log = logging.getLogger(__name__)
 
@@ -72,10 +68,6 @@ class TrendReq(object):
         self._retry_config = dict(
             wait=wait_exponential(multiplier=self.backoff_factor), 
             stop=stop_after_attempt(self.retries),
-            retry=retry_if_exception_type((
-                ConnectionError, 
-                HTTPError, 
-                exceptions.ResponseError)),
             reraise=True
         )
         
@@ -131,14 +123,18 @@ class TrendReq(object):
     async def GetGoogleCookie(self):
         """
         Gets google cookie (used for each and every proxy)
-        Removes proxy from the list on proxy error
+        Blacklist proxies on error.
         """
         def retry_if_proxies_remaining(ex):
             should_retry = True
             if isinstance(ex, ProxyError) and ex.response.status_code == 429:
+                logging.info((f"Proxy {self.proxies[self.proxy_index]} responded with 429."
+                               " Will retry request with another proxy."))
                 self._rate_limited_proxies.append(self.proxies[self.proxy_index])
                 del self.proxies[self.proxy_index]
             elif len(self.proxies) > 0:
+                logging.error((f"Proxy {self.proxies[self.proxy_index]} caused {str(ex)}."
+                                " Blacklisting proxy and will retry request with another."))
                 self.blacklisted_proxies.append(self.proxies[self.proxy_index])
                 del self.proxies[self.proxy_index]
             else:
