@@ -184,8 +184,8 @@ class TestTrendReqWithProxies:
         
         #Ensure we sent req to proxies, and then w/o proxy once proxies exausted
         for proxy in proxies:
-            client_mock.assert_any_call(http2=ANY, proxies={'all': proxy})
-        client_mock.assert_called_with(http2=ANY, proxies=None)
+            client_mock.assert_any_call(proxies={'all': proxy})
+        client_mock.assert_called_with(proxies=None)
 
         #Proxies that returned 429 should still be available in proxy list
         assert pytrend.proxies.sort() == proxies.sort()

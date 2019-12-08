@@ -24,6 +24,7 @@ setup(
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'License :: OSI Approved :: MIT License'
     ],
     install_requires=['pandas>=0.25', 'lxml', 'httpx==0.9.3'],

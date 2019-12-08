@@ -38,8 +38,8 @@ class TrendReq(object):
     CATEGORIES_URL = 'https://trends.google.com/trends/api/explore/pickers/category'
     TODAY_SEARCHES_URL = 'https://trends.google.com/trends/api/dailytrends'
 
-    def __init__(self, hl='en-US', tz=360, geo='', timeout=DEFAULT_TIMEOUT_CONFIG, 
-                 http2=True, proxies=[], retries=0, backoff_factor=0):
+    def __init__(self, hl='en-US', tz=360, geo='', timeout=DEFAULT_TIMEOUT_CONFIG,
+                 proxies=[], retries=0, backoff_factor=0):
         """
         Initialize default values for params
         """
@@ -57,7 +57,6 @@ class TrendReq(object):
         self._rate_limited_proxies = []
         self.proxy_index = 0
         self.cookies = None
-        self.http2 = http2
 
         # intialize widget payloads
         self.token_payload = dict()
@@ -113,7 +112,7 @@ class TrendReq(object):
             Response -- A response object containing the requested information.
         """        
         proxy = self._get_proxy()
-        async with Client(proxies=proxy, http2=self.http2) as c:
+        async with Client(proxies=proxy) as c:
             req = getattr(c, method)
             response = await req(url, **kwargs)
         if not str(response.status_code).startswith('2'):
