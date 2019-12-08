@@ -1,13 +1,12 @@
 from datetime import date, timedelta
 from functools import partial
-from time import sleep
 from calendar import monthrange
 
 import pandas as pd
 
 from pytrendsasync.exceptions import ResponseError
 from pytrendsasync.request import TrendReq
-from asyncio import iscoroutinefunction
+from asyncio import iscoroutinefunction, sleep
 
 
 def get_last_date_of_month(year: int, month: int) -> date:
@@ -43,7 +42,7 @@ async def _fetch_data(pytrends, build_payload, timeframe: str) -> pd.DataFrame:
         except ResponseError as err:
             print(err)
             print(f'Trying again in {60 + 5 * attempts} seconds.')
-            sleep(60 + 5 * attempts)
+            await sleep(60 + 5 * attempts)
             attempts += 1
             if attempts > 3:
                 print('Failed after 3 attemps, abort fetching.')
@@ -122,7 +121,7 @@ async def get_daily_data(word: str,
             print(f'{word}:{timeframe}')
         results[current] = await _fetch_data(pytrends, build_payload, timeframe)
         current = last_date_of_month + timedelta(days=1)
-        sleep(wait_time)  # don't go too fast or Google will send 429s
+        await sleep(wait_time)  # don't go too fast or Google will send 429s
 
     daily = pd.concat(results.values()).drop(columns=['isPartial'])
     complete = daily.join(monthly, lsuffix='_unscaled', rsuffix='_monthly')
