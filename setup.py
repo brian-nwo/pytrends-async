@@ -26,7 +26,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'License :: OSI Approved :: MIT License'
     ],
-    install_requires=['pandas>=0.25', 'lxml', 'httpx==0.8.0'],
+    install_requires=['pandas>=0.25', 'lxml', 'httpx==0.9.3'],
     keywords='google trends api search async asyncio',
     packages=['pytrendsasync']
 )
