@@ -336,6 +336,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## 0.3.1 (2019-12-08)
+
+### Fixed
+- Fixed import of `asyncio.sleep` in `dailydata.py`
+
 ## 0.3.0 (2019-12-08)
 
 ### Added
@@ -370,4 +375,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## 0.1.0 (2019-12-01)
 
 - Initial release of pytrends-async for testing purposes.
-
