@@ -2,9 +2,7 @@
 
 ## Introduction
 
-A fork of pytrends with full async/await support. This package is currently in
-development early testing/development and is lacking proper retry support and
-exception handling.
+A fork of pytrends with full async/await and retry support.
 
 ## Table of contents
 
