@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## 0.3.2 (2019-12-23)
+
+### Changed
+- Updated underlying HTTPX library to 0.9.5 from 0.9.3
+
 ## 0.3.1 (2019-12-08)
 
 ### Fixed
