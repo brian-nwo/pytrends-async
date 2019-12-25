@@ -51,7 +51,7 @@ or if you want to use proxies as you are blocked due to Google rate limit:
 
     from pytrendsasync.request import TrendReq
 
-    pytrends = TrendReq(hl='en-US', tz=360, timeout=(10,25), proxies=['https://34.203.233.13:80',], retries=2, backoff_factor=0.1)
+    pytrends = TrendReq(hl='en-US', tz=360, timeout=10, proxies=['https://34.203.233.13:80',])
 
 * `timeout(connect, read)`
 
