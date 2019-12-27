@@ -34,7 +34,7 @@ A fork of pytrends with full async/await and retry support.
 ## Requirements
 
 * Written for python 3.6+
-* Requires httpx==0.9.3, lxml, Pandas
+* Requires httpx==0.9.5, lxml, Pandas
 
 <sub><sup>[back to top](#pytrends)</sub></sup>
 
