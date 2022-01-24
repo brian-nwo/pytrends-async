@@ -220,6 +220,7 @@ class TrendReq(object):
         self.token_payload['req'] = json.dumps(self.token_payload['req'])
         # get tokens
         await self._tokens()
+        return self
 
     async def _tokens(self):
         """Makes request to Google to get API tokens for interest over time, interest by region and related queries"""
