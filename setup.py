@@ -29,8 +29,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'License :: OSI Approved :: MIT License'
     ],
-    install_requires=['pandas>=0.25', 'lxml', 'httpx==0.9.5', 'tenacity==6.0.0', 'git+https://{github_token}@github.com/user/{package}.git@{version}#egg={package}-0'
-        .format(github_token=github_token, package=package, version='master')],
+    install_requires=['pandas>=0.25', 'lxml', 'httpx==0.9.5', 'tenacity==6.0.0', 'git+ssh://git@github.com:brian-nwo/pytrends-async.git@master#egg=pytrends-async']
     keywords='google trends api search async asyncio',
     packages=['pytrendsasync'],
 )
