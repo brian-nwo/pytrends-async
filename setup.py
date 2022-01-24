@@ -5,6 +5,7 @@ from setuptools import setup, find_packages
 
 dir = os.path.dirname(__file__)
 github_token = os.environ['GITHUB_TOKEN']
+package='pytrends-async'
 
 with io.open(os.path.join(dir, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
@@ -31,9 +32,8 @@ setup(
     install_requires=['pandas>=0.25', 'lxml', 'httpx==0.9.5', 'tenacity==6.0.0'],
     keywords='google trends api search async asyncio',
     packages=['pytrendsasync'],
-    install_requires='package',
     dependency_links = [
-    'git+https://{github_token}@github.com/user/{package}.git/@{version}#egg={package}'
-        .format(github_token=github_token, package='pytrends-async', version=master)
+    'git+https://{github_token}@github.com/user/{package}.git/@{version}#egg={package}-0'
+        .format(github_token=github_token, package=package, version=master)
         ]
 )
