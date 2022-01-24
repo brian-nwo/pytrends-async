@@ -34,6 +34,6 @@ setup(
     packages=['pytrendsasync'],
     dependency_links = [
     'git+https://{github_token}@github.com/user/{package}.git/@{version}#egg={package}-0'
-        .format(github_token=github_token, package=package, version=master)
+        .format(github_token=github_token, package=package, version='master')
         ]
 )
